@@ -88,7 +88,7 @@ let build_ses_header ~creds =
 
   let hmac_sha1_encoder = (Cryptokit.MAC.hmac_sha1 creds.Creds.aws_secret_access_key) in
   let sign = Cryptokit.hash_string hmac_sha1_encoder date in
-  let sign_64 = Netencoding.Base64.encode sign in
+  let sign_64 = Cryptokit.(transform_string (Base64.encode_multiline ())) sign in
 
   let h = Printf.sprintf "AWS3-HTTPS AWSAccessKeyId=%s, Algorithm=HmacSHA1, Signature=%s" creds.Creds.aws_access_key_id sign_64 in
 

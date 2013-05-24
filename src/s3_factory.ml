@@ -685,8 +685,10 @@ let list_objects ?prefix ?marker ?max_keys creds region bucket =
       | Some mk -> ("max-keys", string_of_int mk) :: params
   in
 
-  let request_url = (service_url_of_region region) ^ (Util.encode_url bucket) ^
-    "?" ^ (Netencoding.Url.mk_url_encoded_parameters params) in
+  let request_url = 
+    let uri = Uri.of_string ((service_url_of_region region) ^ (Util.encode_url bucket)) in
+    Uri.to_string (Uri.with_query' uri params)
+  in
 
   try_lwt
     lwt response_headers, response_body = HC.get ~headers request_url in

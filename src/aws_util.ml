@@ -59,22 +59,11 @@ let encode_key_equals_value ?(safe=false) kvs =
    list; eg [url_params "somegrabage?x=y&z&p=q"] will return
    ["x","y";"z","";"p","q"] *)
 let url_params uri =
-  match Pcre.split ~pat:"\\?" uri with
-    | [before_question_mark ; after_question_mark] ->
-      let kvs = Pcre.split ~pat:"&" after_question_mark in
-      List.fold_left (
-        fun accu kv ->
-          match Pcre.split ~max:2 ~pat:"=" kv with (* "x=y=z" -> ["x";"y=z"] *)
-            | [k; v] ->
-              let kv = Netencoding.Url.decode k, Netencoding.Url.decode v in
-              kv :: accu
-            | [k] ->
-              let kv = Netencoding.Url.decode k, "" in
-              kv :: accu
-            | _ -> accu
-      ) [] kvs
-    | _ -> []
-
+  let uri = Uri.of_string uri in
+  List.map (function
+   |(k,[]) -> k,""
+   |(k,hd::_) -> k,hd
+  ) (Uri.query uri)
 
 let file_size path =
   let s = Unix.stat path in
@@ -177,8 +166,7 @@ let string_of_t = function
 
 (* Post encoding *****************************************************************)
 
-let encode_post_url = Netencoding.Url.mk_url_encoded_parameters
-
+let encode_post_url params = Uri.to_string (Uri.with_query' (Uri.of_string "")  params)
 
 let filter_map_rev f l =
   let rec aux acc = function
